@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "2f7d80c9-59b4-40f8-ba27-f2eae7d35ffd",
+		"name": "Scraping Endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Add keyword",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"keywords\" : \"coronavirus\"}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/new_keyword",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"new_keyword"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get news scraping google search",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/api/get_news",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"get_news"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
