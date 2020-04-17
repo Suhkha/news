@@ -13,6 +13,10 @@ class News(db.Model):
   keyword = db.Column(db.String(10), nullable=False) 
   frequency = db.Column(db.Integer(), nullable=False)
 
+  def __init__(self, keyword="" ,frequency=0):
+    self.key = keyword
+    self.freq = frequency
+    
   @classmethod
   def create(cls, title, excerpt, reference, keyword, frequency):
     new = News(
@@ -22,6 +26,7 @@ class News(db.Model):
       keyword=keyword, 
       frequency=frequency
     )
+    
     return new.save()
   
   def save(self):
@@ -34,3 +39,4 @@ class News(db.Model):
 
 def json(self):
   return {'reference': self.reference}
+
