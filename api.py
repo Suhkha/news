@@ -1,46 +1,64 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import urllib
 import requests
 from bs4 import BeautifulSoup
 import nltk
+from nltk import FreqDist
 
 app = Flask(__name__)
-# desktop user-agent
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0"
+# user-agent
+HEADERS = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0"}
 
-list_of_keywords = { "keywords": [ 
-  "china", 
-  "covid", 
-  "mexico", 
-  "hospitales" 
-]}
-
+list_of_keywords = { "keywords": [ "china", "covid", "mexico", "hospitales" ]}
 keywords = list_of_keywords.get('keywords')
 
 @app.route('/api/get_news', methods=['GET'])
 def get_news():
+  # Initialize the list
   results = []
-  for keyword in keywords:
-    URL = "https://google.com/search?q="+keyword
-    headers = {"user-agent": USER_AGENT}
-    search = requests.get(URL, headers=headers)
 
+  # Iterate each keyword of the list
+  for keyword in keywords:
+
+    # Asign to the URL the keyword to search
+    URL = "https://google.com/search?q="+keyword
+    search = requests.get(URL, headers=HEADERS)
+  
+    # If the search has a 200 status we parse the content found
     if search.status_code == 200:
       response = BeautifulSoup(search.content, "html.parser")
-      for new in response.find_all('div', class_='r'):
+
+      # In the response we find the common class rc and their anchors
+      for new in response.find_all('div', class_='rc', limit=3):
         anchors = new.find_all('a')
+
         if anchors:
+
+          # Get the content of anchor: href
           link = anchors[0]['href']
+
+          # Get the text of the results, like title and excerpt of the post/article according to specific tags and class
           title = new.find('h3').text
+          excerpt = new.find('span', class_='st').text
           news = {
-            "keyword": keyword,
-            "content": title,
-            "reference": link,
-            "ranking" : freqdist1
+            "keyword" : keyword,
+            "title" : title,
+            "reference" : link,
+            "excerpt" : excerpt
           }
+
+          # Join content of the excerpt and title, and pass to lowercase to ensure a better count of frequency words
+          full_text = news['excerpt'].lower() + news['title'].lower()
+          text = full_text.split(" ")
+          FreqDistBody = FreqDist(text)
+          quantity = FreqDistBody[keyword]
+
+          # Adding a new key value pair to news
+          news.update( {'frequency' : quantity} )
+  
           results.append(news)
           
-  return jsonify(results)
+  return jsonify(sorted(results, key=lambda k:k['frequency'], reverse=True))
 
 
 @app.route('/api/new_keyword', methods=['POST'])
