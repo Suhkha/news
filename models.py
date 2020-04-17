@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+import json
+
 db = SQLAlchemy()
 
 class News(db.Model):
@@ -29,3 +31,6 @@ class News(db.Model):
       return self
     except:
       return False
+
+def json(self):
+  return {'reference': self.reference}

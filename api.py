@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 import nltk
 from nltk import FreqDist
+import random
 
 
 def create_app(enviroment):
@@ -33,9 +34,9 @@ def get_news():
 
   # Iterate each keyword of the list
   for keyword in keywords:
-
+    start = random.randrange(0, 180, 10)
     # Asign to the URL the keyword to search
-    URL = "https://google.com/search?q="+keyword
+    URL = "https://google.com/search?q="+keyword+"&start="+str(start)
     search = requests.get(URL, headers=HEADERS)
   
     # If the search has a 200 status we parse the content found
@@ -47,33 +48,38 @@ def get_news():
         anchors = new.find_all('a')
 
         if anchors:
-
           # Get the content of anchor: href
-          link = anchors[0]['href']
+          reference = anchors[0]['href']
 
-          # Get the text of the results, like title and excerpt of the post/article according to specific tags and class
-          title = new.find('h3').text
-          excerpt = new.find('span', class_='st').text
-          news = {
-            "keyword" : keyword,
-            "title" : title,
-            "reference" : link,
-            "excerpt" : excerpt
-          }
+          # Search in database if the reference is current saved
+          find_reference = News.query.filter_by(reference=reference).first()
 
-          # Join content of the excerpt and title, and pass to lowercase to ensure a better count of frequency words
-          full_text = news['excerpt'].lower() + news['title'].lower()
-          text = full_text.split(" ")
-          FreqDistBody = FreqDist(text)
-          frequency = FreqDistBody[keyword]
+          # If the reference is not saved in database we extract the data of the search
+          if not find_reference:
 
-          # Adding a new key value pair to news
-          news.update( {'frequency' : frequency} )
+            # Get the text of the results, like title and excerpt of the post/article according to specific tags and class
+            title = new.find('h3').text
+            excerpt = new.find('span', class_='st').text
+            news = {
+              "keyword" : keyword,
+              "title" : title,
+              "reference" : reference,
+              "excerpt" : excerpt
+            }
+
+            # Join content of the excerpt and title, and pass to lowercase to ensure a better count of frequency words
+            full_text = news['excerpt'].lower() + news['title'].lower()
+            text = full_text.split(" ")
+            FreqDistBody = FreqDist(text)
+            frequency = FreqDistBody[keyword]
+
+            # Adding a new key value pair to news
+            news.update( {'frequency' : frequency} )
   
-          results.append(news)
+            results.append(news)
 
-          # Store in database the results of the search
-          new = News.create(news['title'], news['excerpt'],news['reference'],  news['keyword'], news['frequency'])
+            # Store in database the results of the search
+            new = News.create(news['title'], news['excerpt'],news['reference'],  news['keyword'], news['frequency'])
           
   return jsonify(sorted(results, key=lambda k:k['frequency'], reverse=True))
 
